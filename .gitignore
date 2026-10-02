@@ -1,22 +1,104 @@
-# IDE配置文件（适配Trae IDE）
-.trae/
+### common ###
+HELP.md
+
+### java ###
+*.class
+
+### gradle ###
+.gradle/
+gradle/
+build/
+
+### maven ###
+target/
+
+### eclipse ###
+.settings/
+.project
+.classpath
+
+### STS ###
+.apt_generated
+.factorypath
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+classes/
+/out/
+*.iws
+*.iml
+*.ipr
+.fastRequest
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
 .vscode/
-.idea/
 .history/
 
+### Trae ###
+.trae/
+
+### agnet ###
+.agents/
+.codegraph/
+.scratch/
+
+### claude ###
+.claude/
+
+### codex ###
+.codex/
+
+### opencode ###
+.opencode/
+.omo/
+
+# 工作树（git worktree add .worktrees/<branch> 隔离开发）
+.worktrees/
+
+### lombock ###
+lombok.config
+
+### temp ###
+temp/
+tmp/
+logs/
+*.log
+*.cache
+*.diff
+*.patch
+*.tmp
+*.java~
+*.properties~
+*.xml~
+
+### system ignore ###
+.DS_Store
+Thumbs.db
 
 # nodejs
 node_modules/
 package-lock.json
+
+# 构建产物
+dist/
+
+# 环境变量
 .env
+!.env.example
+.env.*
+
+skills-lock.json
 
 # wrangler
 wr_modules/
 .wrangler/
-
-## 日志与临时文件
-*.log
-logs/
-Logs/
-tmp/
-temp/
