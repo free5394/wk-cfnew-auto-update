@@ -36,28 +36,36 @@ jobs:
 
       - name: 获取最新版本号
         id: get_last_version
+        env:
+          # 使用内置 GITHUB_TOKEN 认证 API 请求，避免共享 Runner IP 触发未认证速率限制（60 次/小时/IP）
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # 获取更新类型，默认为 'release'
           ACTUAL_RELEASE_TYPE="${{ env.RELEASE_TYPE || 'release' }}"
           echo "更新类型: $ACTUAL_RELEASE_TYPE"
 
+          # 带认证的通用 curl 参数，--retry 应对瞬时网络错误
+          CURL_ARGS=(-s --retry 3 --retry-delay 2 -H "Authorization: Bearer ${GITHUB_TOKEN}")
+
           if [ "$ACTUAL_RELEASE_TYPE" == "prerelease" ]; then
             # 如果选择预发布版本，获取所有 release 并筛选最新的非草稿预发布版本
-            latest_tag=$(curl -s https://api.github.com/repos/${{ env.GITHUB_REPO }}/releases \
-              | jq -r 'map(select(.prerelease == true and .draft == false)) | sort_by(.published_at) | .[-1].tag_name')
+            releases_json=$(curl "${CURL_ARGS[@]}" "https://api.github.com/repos/${{ env.GITHUB_REPO }}/releases")
+            # jq 表达式末尾加 // empty：无匹配结果时输出空字符串而非字面量 "null"，确保下方空值检查生效
+            latest_tag=$(echo "$releases_json" | jq -r 'map(select(.prerelease == true and .draft == false)) | sort_by(.published_at) | .[-1].tag_name // empty')
             if [ -z "$latest_tag" ]; then
-              # 未找到任何预发布版本。
-              echo "未找到任何预发布版本。" 
+              # 未找到任何预发布版本，附带 API 原始返回便于排查
+              echo "未找到任何预发布版本。API 返回: $releases_json"
               exit 1
             fi
             # 最新预发布版本
             echo "最新预发布版本: $latest_tag"
           else
             # 默认或选择正式发布版本，获取最新正式发布版本 (GitHub API 的 /latest 默认返回非预发布版本)
-            latest_tag=$(curl -s https://api.github.com/repos/${{ env.GITHUB_REPO }}/releases/latest | jq -r '.tag_name')
+            releases_json=$(curl "${CURL_ARGS[@]}" "https://api.github.com/repos/${{ env.GITHUB_REPO }}/releases/latest")
+            latest_tag=$(echo "$releases_json" | jq -r '.tag_name // empty')
             if [ -z "$latest_tag" ]; then
-              # 未找到任何正式发布版本。
-              echo "未找到任何正式发布版本。" 
+              # 未找到任何正式发布版本，附带 API 原始返回便于排查
+              echo "未找到任何正式发布版本。API 返回: $releases_json"
               exit 1
             fi
             # 最新正式发布版本
